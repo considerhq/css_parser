@@ -258,7 +258,6 @@ module CssParser
       each_selector(which_media) do |selectors, declarations, specificity, media_types|
         media_types.each do |media_type|
           styles_by_media_types[media_type] ||= []
-          next if styles_by_media_types[media_type].include?([selectors, declarations])
           styles_by_media_types[media_type] << [selectors, declarations]
         end
       end
@@ -377,13 +376,19 @@ module CssParser
             block_depth = block_depth + 1
             in_at_media_rule = false
             in_media_block = true
-            current_media_queries << CssParser.sanitize_media_query(current_media_query)
+            new_media_query = CssParser.sanitize_media_query(current_media_query)
+            if !current_media_queries.include?(new_media_query)
+              current_media_queries << new_media_query
+            end
             current_media_query = ''
           elsif token =~ /[,]/
             # new media query begins
             token.gsub!(/[,]/, ' ')
             current_media_query += token.strip + ' '
-            current_media_queries << CssParser.sanitize_media_query(current_media_query)
+            new_media_query = CssParser.sanitize_media_query(current_media_query)
+            if !current_media_queries.include?(new_media_query)
+              current_media_queries << new_media_query
+            end
             current_media_query = ''
           else
             current_media_query += token.strip + ' '
